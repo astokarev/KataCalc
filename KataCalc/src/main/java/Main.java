@@ -1,82 +1,48 @@
-import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
-    static Scanner scanner = new Scanner(System.in);
-    static int number1, number2;
-    static char operation;
-    static int result;
-
     public static void main(String[] args) throws Exception {
         System.out.println("Введите выражение [2+2] или два римских числа от I до X:[V+V] + Enter ");
-//      Считываем строку userInput которую ввёл пользователь
-        String userInput = scanner.nextLine();
-//
-        char[] charArr = new char[10];
-//
-        for (int i = 0; i < userInput.length(); i++) {
-            charArr[i] = userInput.charAt(i);
-            if (charArr[i] == '+') {
-                operation = '+';
-            } else if (charArr[i] == '-') {
-                operation = '-';
-            } else if (charArr[i] == '*') {
-                operation = '*';
-            } else if (charArr[i] == '/') {
-                operation = '/';
-            } 
+        Scanner scan = new Scanner(System.in);
+        String input = scan.nextLine().replaceAll("\\s+", "");
+        int result;
+        int num1;
+        int num2;
+        char operator = ' ';
+        for (char symbol : input.toCharArray()) {
+            if ((symbol == '+') || (symbol == '-') || (symbol == '*') || (symbol == '/')) {
+                operator = symbol;
+            }
         }
-        String under_charString = String.valueOf(charArr).trim();
-        String[] blocks = under_charString.split("[+-/*]");
-        String value00 = blocks[0];
-        String value01 = blocks[1];
+        String[] values = input.split("[*/+-]");
+        if (isRoman(values[0]) && isRoman(values[1])) {
+            num1 = romanToNumber(values[0]);
+            num2 = romanToNumber(values[1]);
+            if ((num1 > num2) || (operator == '+') || (operator == '*')){
+                result = calc(num1, num2, operator);
+                System.out.println(numToRoman(result));
+            } else throw new Exception("при вычитании/делении первое число должно быть больше второго");
 
-        if(isRoman(value00)&&isRoman(value01)) {
-            number1 = romanToNumber(value00);
-            number2 = romanToNumber(value01);
+        } else if (isNumeric(values[0]) && isNumeric(values[1])) {
+            num1 = Integer.parseInt(values[0]);
+            num2 = Integer.parseInt(values[1]);
+            if (validateNum(num1) && validateNum(num2)) {
+                System.out.println(calc(num1, num2, operator));
 
-        if (number1 < 0 && number2 < 0) {
-            result = 0;
+
+            } else throw new Exception("Число должно быть от 1 до 10");
+
         } else {
-            result = calculated(number1, number2, operation);
-            if (result<1) throw new NumberFormatException("римские числа не бывают меньше I");
-            System.out.println("---Результат для римских цифр----");
-            String resultRoman = convertNumToRoman(result);
-            System.out.println(value00 + " " + operation + " " + value01 + " = " + resultRoman);
+            throw new NumberFormatException("Оба числа должны быть в одном формате: римские или арабские") {
+            };
         }
-        } else if(isNumeric(value00)&&isNumeric(value01)){
-            number1 = Integer.parseInt(value00);
-            number2 = Integer.parseInt(value01);
-            result = calculated(number1, number2, operation);
-            System.out.println("--Результат для арабских цифр----");
-            System.out.println(number1 + " " + operation + " " + number2 + " = " + result);
-        } else {
-            throw new NumberFormatException("Введены неверные данные, только римские и арабские числа!");
-        }
+
+
     }
 
-
-
-    static boolean isRoman(String input){
-        Pattern pattern = Pattern.compile("^(?=[MDCLXVI])M*(C[MD]|D?C*)(X[CL]|L?X*)(I[XV]|V?I*)$");
-        Matcher matcher = pattern.matcher(input);
-        while (matcher.find()){
-            return true;
-        }
-        return false;
-    }
-
-    static boolean isNumeric(String input){
-        Pattern pattern = Pattern.compile("\\d");
-        Matcher matcher = pattern.matcher(input);
-        while (matcher.find()){
-            return true;
-        }
-        return false;
-    }
-    private static String convertNumToRoman(int numArabian) {
+    private static String numToRoman(int num) {
         String[] roman = {"O", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
                 "XXI", "XXII", "XXIII", "XXIV", "XXV", "XXVI", "XXVII", "XXVIII", "XXIX", "XXX", "XXXI", "XXXII", "XXXIII", "XXXIV", "XXXV", "XXXVI", "XXXVII", "XXXVIII", "XXXIX", "XL",
                 "XLI", "XLII", "XLIII", "XLIV", "XLV", "XLVI", "XLVII", "XLVIII", "XLIX", "L", "LI", "LII", "LIII", "LIV", "LV", "LVI", "LVII", "LVIII", "LIX", "LX",
@@ -85,70 +51,58 @@ public class Main {
                 "LXXXI", "LXXXII", "LXXXIII", "LXXXIV", "LXXXV", "LXXXVI", "LXXXVII", "LXXXVIII", "LXXXIX", "XC",
                 "XCI", "XCII", "XCIII", "XCIV", "XCV", "XCVI", "XCVII", "XCVIII", "XCIX", "C"
         };
-        final String s = roman[numArabian];
-        return s;
+        return roman[num];
     }
 
+    static boolean isRoman(String input) {
+        Pattern pattern = Pattern.compile("^(?=[MDCLXVI])M*(C[MD]|D?C*)(X[CL]|L?X*)(I[XV]|V?I*)$");
+        Matcher matcher = pattern.matcher(input);
+        return matcher.find();
+    }
+
+    static boolean isNumeric(String input) {
+        Pattern pattern = Pattern.compile("\\d");
+        Matcher matcher = pattern.matcher(input);
+        return matcher.find();
+    }
+
+    public static int calc(int num1, int num2, char op) {
+        switch (op) {
+            case '+':
+                return num1 + num2;
+            case '-':
+                return num1 - num2;
+            case '*':
+                return num1 * num2;
+            case '/':
+                return num1 / num2;
+        }
+        return 0;
+    }
 
     private static int romanToNumber(String roman) {
-        /*"^M{0,3}" + ///от 0 до 3 M
-                "(CM|CD|D?C{0,3})?" +
-                "(XC|XL|L?X{0,3})?" +
-                "(IX|IV|V?I{0,3})?$'"*/
         try {
-            switch (roman) {
-                case "I":
-                    return 1;
-                case "II":
-                    return 2;
-                case "III":
-                    return 3;
-                case "IV":
-                    return 4;
-                case "V":
-                    return 5;
-                case "VI":
-                    return 6;
-                case "VII":
-                    return 7;
-                case "VIII":
-                    return 8;
-                case "IX":
-                    return 9;
-                case "X":
-                    return 10;
-            }
-        } catch (InputMismatchException e) {
-            throw new InputMismatchException("Неверный формат данных");
+            return switch (roman) {
+                case "I" -> 1;
+                case "II" -> 2;
+                case "III" -> 3;
+                case "IV" -> 4;
+                case "V" -> 5;
+                case "VI" -> 6;
+                case "VII" -> 7;
+                case "VIII" -> 8;
+                case "IX" -> 9;
+                case "X" -> 10;
+                default -> throw new Exception("Число должно быть от I до X");
+            };
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return -1;
     }
 
-    public static int calculated(int num1, int num2, char op) {
-        int result = 0;
-        switch (op) {
-            case '+':
-                result = num1 + num2;
-                break;
-            case '-':
-                result = num1 - num2;
-                break;
-            case '*':
-                result = num1 * num2;
-                break;
-            case '/':
-                try {
-                    result = num1 / num2;
-                } catch (ArithmeticException | InputMismatchException e) {
-                    System.out.println("Exception : " + e);
-                    System.out.println("Only integer non-zero parameters allowed");
-
-                    break;
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Не верный знак операции");
-        }
-        return result;
+    public static boolean validateNum(int val1) {
+        if ((val1 >= 1) && (val1 <= 10)) return true;
+        return false;
     }
 }
